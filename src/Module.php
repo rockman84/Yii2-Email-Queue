@@ -2,6 +2,7 @@
 namespace sky\emailqueue;
 
 use Yii;
+
 /*
  * ```
  * 'emailqueue' => [
@@ -40,6 +41,9 @@ class Module extends \yii\base\Module
     protected $_mailer = null;
 
     public function init() {
+        if (Yii::$app instanceof \yii\console\Application) {
+            $this->controllerNamespace = 'sky\emailqueue\commands';
+        }
         parent::init();
         static::$app = $this;
     }

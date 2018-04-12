@@ -2,7 +2,7 @@
     "name": "sky/emailqueue",
     "description": "Yii Email Queue",
     "type": "yii2-extension",
-    "license": "GPL V3",
+    "license": "Apache-2.0",
     "authors": [
         {
             "name": "Wong Hansen",
