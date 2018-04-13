@@ -182,7 +182,7 @@ class EmailQueue extends \sky\yii\db\ActiveRecord
     
     public function compose()
     {
-        $message = Module::$app->mailer->createMessage();
+        $message = Module::$app->mailer->compose();
         if ($this->from) {
             $message->setFrom($this->from);
         }

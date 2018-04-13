@@ -5,7 +5,7 @@ use sky\emailqueue\models\EmailQueue;
 use sky\emailqueue\Module;
 use Yii;
 
-class EmailQueue extends \yii\console\Controller
+class EmailQueueController extends \yii\console\Controller
 {
     public function actionChecking()
     {
