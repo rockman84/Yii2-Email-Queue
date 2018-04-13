@@ -24,6 +24,8 @@ use yii\behaviors\TimestampBehavior;
  */
 class EmailQueue extends \sky\yii\db\ActiveRecord
 {
+    const EVENT_AFTER_COMPOSE = 1;
+    
     const STATUS_WAITING_QUEUE = 0;
     const STATUS_DONE = 1;
     const STATUS_CANCEL = 2;
@@ -34,7 +36,7 @@ class EmailQueue extends \sky\yii\db\ActiveRecord
     const PRIORITY_LOW = 3;
 
 
-    static $serverTask;
+    static $serverTask = [];
 
     protected $_dataMap = [
         'subject' => null,
@@ -93,14 +95,25 @@ class EmailQueue extends \sky\yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['server_id'], 'default', 'value' => Module::$app->serverID],
+            [['server_id'], 'default', 'value' => function ($module) {
+                if (Module::$app->autoAlocationServer) {
+                    if (!static::$serverTask) {
+                        foreach (Module::$app->serverAvaliable as $id => $name) {
+                            static::$serverTask[$id] = static::findReadyToSend($id, false)->count();
+                        }
+                    }
+                    return array_keys(static::$serverTask, min(static::$serverTask))[0];
+                }
+                return Module::$app->serverID;
+            }],
             [['time_send', 'type', 'server_id', 'status', 'created_at', 'send_at', 'priority', 'send_at'], 'integer'],
             [['server_id'], 'in', 'range' => array_keys(Module::$app->serverAvaliable)],
             [['status'], 'in', 'range' => array_keys(static::getStatus())],
             [['data'], 'safe'],
             [['time_send'], 'default', 'value' => time()],
-            [['htmlBody', 'textBody', 'cc', 'bcc', 'from'], 'string'],
-            [['data', 'server_id', 'htmlBody', 'subject', 'to', 'from'], 'required'],
+            [['htmlBody', 'textBody', 'cc', 'bcc', 'from', 'to', 'replayTo'], 'string'],
+            [['to', 'from', 'replayTo', 'cc', 'bcc'], 'email'],
+            [['data', 'server_id', 'htmlBody', 'subject', 'to'], 'required'],
         ];
     }
 
@@ -149,6 +162,13 @@ class EmailQueue extends \sky\yii\db\ActiveRecord
         return parent::beforeSave($insert);
     }
     
+    public function afterSave($insert, $changedAttributes) {
+        if (Module::$app->autoAlocationServer && $insert && $this->status == static::STATUS_WAITING_QUEUE && array_key_exists($this->server_id, static::$serverTask)) {
+            static::$serverTask[$this->server_id]++;
+        }
+        return parent::afterSave($insert, $changedAttributes);
+    }
+    
     public static function findReadyToSend($serverID, $limit = 100)
     {
         return static::find()->where([
@@ -157,21 +177,28 @@ class EmailQueue extends \sky\yii\db\ActiveRecord
             ])
             ->andWhere(['<=', 'time_send', time()])
             ->orderBy(['priority' => SORT_ASC, 'time_send' => SORT_ASC])
-            ->limit($limit)
-            ->all();
+            ->limit($limit);
     }
     
     public function compose()
     {
         $message = Module::$app->mailer->createMessage();
+        if ($this->from) {
+            $message->setFrom($this->from);
+        }
+        if ($this->replayTo) {
+            $message->setReplyTo($this->replayTo);
+        }
+        $message->setTo($this->to);
         $message->setSubject($this->subject);
         $message->setHtmlBody($this->htmlBody);
+        $message->setTextBody($this->textBody);
+        return $message;
     }
     
     public static function createQueue($params)
     {
         if (!static::$serverTask) {
-            static::find();
         }
         return new static($params);
     }

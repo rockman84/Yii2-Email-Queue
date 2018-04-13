@@ -8,6 +8,7 @@ use sky\emailqueue\models\EmailQueueSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 
 /**
  * EmailQueueController implements the CRUD actions for EmailQueue model.
@@ -26,6 +27,15 @@ class EmailQueueController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
+//            'access' => [
+//                'class' => AccessControl::class,
+//                'rules' => [
+//                    [
+//                        'allow' => true,
+//                        'roles' => ['@'],
+//                    ]
+//                ],
+//            ],
         ];
     }
 
@@ -42,15 +52,6 @@ class EmailQueueController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
-    }
-    
-    public function actionTest()
-    {
-        $model = EmailQueue::createQueue([
-            'htmlBody' => 'test',
-        ]);
-        $model->validate();
-        var_dump($model->errors);
     }
 
     /**

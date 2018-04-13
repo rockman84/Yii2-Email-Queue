@@ -2,6 +2,7 @@
 namespace sky\emailqueue;
 
 use Yii;
+use yii\mail\BaseMailer;
 
 /*
  * ```
@@ -25,12 +26,16 @@ class Module extends \yii\base\Module
     public $serverID = 1;
     
     public $serverAvaliable = [
-        1 => 'Local Server'
+        1 => 'Local Server',
+        2 => 'My 2 Server',
+        3 => 'My 3 Server',
     ];
     
     public $deleteAfterSend = false;
     
     public $emailSendPerSession = 100;
+    
+    public $autoAlocationServer = true;
     
     /**
      *
@@ -46,6 +51,10 @@ class Module extends \yii\base\Module
         }
         parent::init();
         static::$app = $this;
+        $this->mailer->on(BaseMailer::EVENT_AFTER_SEND, function ($event) {
+            /* @var $event \yii\mail\MailEvent */
+            $event->isSuccessful;
+        });
     }
     
     public function getMailer()

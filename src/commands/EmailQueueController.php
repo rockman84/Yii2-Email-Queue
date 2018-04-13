@@ -11,7 +11,7 @@ class EmailQueue extends \yii\console\Controller
     {
         $success = [];
         $fail = [];
-        foreach (EmailQueue::findReadyToSend(Module::$app->serverID) as $queue) {
+        foreach (EmailQueue::findReadyToSend(Module::$app->serverID)->all() as $queue) {
             if ($queue->status == EmailQueue::STATUS_WAITING_QUEUE && $queue->compose()->send()) {
                 $queue->status = EmailQueue::STATUS_DONE;
                 $queue->save();
