@@ -22,7 +22,7 @@ use sky\emailqueue\models\EmailQueue;
 
             <?= $form->field($model, 'priority')->dropDownList(EmailQueue::getPriority()) ?>
             <?php if (!$model->isNewRecord) : ?>
-                <?= $form->field($model, 'status')->textInput() ?>
+                <?= $form->field($model, 'status')->dropDownList(EmailQueue::getStatus()) ?>
             <?php endif; ?>
         </div>
         <div class="col-md-8">

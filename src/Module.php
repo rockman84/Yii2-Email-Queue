@@ -27,8 +27,6 @@ class Module extends \yii\base\Module
     
     public $serverAvaliable = [
         1 => 'Local Server',
-        2 => 'My 2 Server',
-        3 => 'My 3 Server',
     ];
     
     public $deleteAfterSend = false;

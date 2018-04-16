@@ -42,6 +42,7 @@ class EmailQueue extends \sky\yii\db\ActiveRecord
         'subject' => null,
         'htmlBody' => null,
         'textBody' => null,
+        'charset' => null,
         'from' => null,
         'replayTo' => null,
         'to' => null,
@@ -111,7 +112,7 @@ class EmailQueue extends \sky\yii\db\ActiveRecord
             [['status'], 'in', 'range' => array_keys(static::getStatus())],
             [['data'], 'safe'],
             [['time_send'], 'default', 'value' => time()],
-            [['htmlBody', 'textBody', 'cc', 'bcc', 'from', 'to', 'replayTo'], 'string'],
+            [['htmlBody', 'textBody', 'cc', 'bcc', 'from', 'to', 'replayTo', 'charset'], 'string'],
             [['to', 'from', 'replayTo', 'cc', 'bcc'], 'email'],
             [['data', 'server_id', 'htmlBody', 'subject', 'to'], 'required'],
         ];
@@ -183,24 +184,20 @@ class EmailQueue extends \sky\yii\db\ActiveRecord
     public function compose()
     {
         $message = Module::$app->mailer->compose();
-        if ($this->from) {
-            $message->setFrom($this->from);
+        foreach ($this->_dataMap as $attribute => $value) {
+            if (!$value) {
+                continue;
+            }
+            $method = 'set' . ucfirst($attribute);
+            if (is_array($value)) {
+                foreach ($value as $val) {
+                    $message->{$method}($val);
+                }
+            } elseif (is_string($value)) {
+                $message->{$method}($value);
+            }
         }
-        if ($this->replayTo) {
-            $message->setReplyTo($this->replayTo);
-        }
-        $message->setTo($this->to);
-        $message->setSubject($this->subject);
-        $message->setHtmlBody($this->htmlBody);
-        $message->setTextBody($this->textBody);
         return $message;
-    }
-    
-    public static function createQueue($params)
-    {
-        if (!static::$serverTask) {
-        }
-        return new static($params);
     }
     
     public static function getStatus($key = null)
